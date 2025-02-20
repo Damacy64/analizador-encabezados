@@ -1,23 +1,25 @@
+from ast import Lambda
 from tkinter import *
-from tkinter import filedialog
-
-def seleccionar_archivo():
-    ruta_archivo = filedialog.askopenfilename(filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")])
-    if ruta_archivo:
-        entrada.delete(0, END)
-        entrada.insert(0, ruta_archivo)
+from logica.extraerHeaders import seleccionar_archivo
 
 raiz = Tk()
 raiz.title("Extraer Headers")
-raiz.geometry("400x150")
+raiz.resizable(False, False)
 
-label = Label(raiz, text="Ingrese la cabecera o seleccione un archivo:")
-label.pack(pady=10)
+frame = Frame(raiz, width=800, height=500)
+frame.pack()
 
-entrada = Entry(raiz, width=50)
-entrada.pack(pady=5)
+label = Label(frame, text="Seleccione un archivo:")
+label.grid(row=1, column=1, pady=10)
 
-boton_seleccionar = Button(raiz, text="Buscar", command=seleccionar_archivo)
-boton_seleccionar.pack(pady=10)
+entrada = Text(frame)
+entrada.grid(row=2, column=1, pady=5, padx=25)
+
+boton_seleccionar = Button(frame, command=lambda:seleccionar_archivo(entrada), text="Buscar")
+boton_seleccionar.grid(row=3, column=1, pady=5)
+
+scroll = Scrollbar(frame, command=entrada.yview)
+scroll.grid(row=2, column=3, sticky="nsew")
+entrada.config(yscrollcommand=scroll.set)
 
 raiz.mainloop()
