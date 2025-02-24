@@ -1,26 +1,23 @@
-import tkinter as tk
-from tkinter import filedialog, scrolledtext
+from tkinter import *
+from tkinter import filedialog
 
-def open_file():
-    file_path = filedialog.askopenfilename()
-    if file_path:
-        with open(file_path, "r", encoding="utf-8") as file:
-            content = file.read()
-        text_area.delete("1.0", tk.END)
-        text_area.insert(tk.INSERT, content)
+def seleccionar_archivo():
+    ruta_archivo = filedialog.askopenfilename(filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")])
+    if ruta_archivo:
+        entrada.delete(0, END)
+        entrada.insert(0, ruta_archivo)
 
-# Crear la ventana principal
-root = tk.Tk()
-root.title("Visor de Archivos")
-root.geometry("600x400")
+raiz = Tk()
+raiz.title("Extraer Headers")
+raiz.geometry("400x150")
 
-# Botón para seleccionar archivo
-btn_open = tk.Button(root, text="Abrir Archivo", command=open_file)
-btn_open.pack(pady=10)
+label = Label(raiz, text="Ingrese la cabecera o seleccione un archivo:")
+label.pack(pady=10)
 
-# Área de texto con scroll
-text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=70, height=20)
-text_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+entrada = Entry(raiz, width=50)
+entrada.pack(pady=5)
 
-# Ejecutar la aplicación
-root.mainloop()
+boton_seleccionar = Button(raiz, text="Buscar", command=seleccionar_archivo)
+boton_seleccionar.pack(pady=10)
+
+raiz.mainloop()
