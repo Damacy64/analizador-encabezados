@@ -11,11 +11,18 @@ una vez termine la clonacion, nos dirigimos a la carpeta creada con el comando `
 cd analizador-encabezados
 ```
 
-## Uso del script:
+## Uso del script usando CLI:
 ```
 python .\main.py {nombreArchivo}
 ```
-### Ejemplo
+
+## Uso del script con UI
+al ejecutar este script, nos abrira una interfaz grafica, donde podremos visualizar mejor la cabecera
+```
+python .\ventana
+```
+
+### Ejemplos
 ```
  python .\main.py .\disney.eml
 ```
