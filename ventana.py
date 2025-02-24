@@ -1,23 +1,31 @@
-from tkinter import *
-from tkinter import filedialog
+import tkinter as tk
+from tkinter import filedialog, scrolledtext
+from logica.extraerHeaders import seleccionar_archivo, buscar_palabra
 
-def seleccionar_archivo():
-    ruta_archivo = filedialog.askopenfilename(filetypes=[("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*")])
-    if ruta_archivo:
-        entrada.delete(0, END)
-        entrada.insert(0, ruta_archivo)
 
-raiz = Tk()
-raiz.title("Extraer Headers")
-raiz.geometry("400x150")
+root = tk.Tk()
+root.title("Revisar Correos")
+root.geometry("700x450")
 
-label = Label(raiz, text="Ingrese la cabecera o seleccione un archivo:")
-label.pack(pady=10)
+# Área de texto con scroll
+text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=70, height=20)
+text_area.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+text_area.config(state="disabled")
 
-entrada = Entry(raiz, width=50)
-entrada.pack(pady=5)
+# Botón para seleccionar archivo
+btn_abrir = tk.Button(root, text="Abrir Archivo", command=lambda: seleccionar_archivo(text_area))
+btn_abrir.pack(pady=10)
 
-boton_seleccionar = Button(raiz, text="Buscar", command=seleccionar_archivo)
-boton_seleccionar.pack(pady=10)
+# Marco para la barra de búsqueda
+busqueda_frame = tk.Frame(root)
+busqueda_frame.pack(pady=5)
 
-raiz.mainloop()
+# Entrada de texto para la búsqueda
+busqueda_entry = tk.Entry(busqueda_frame, width=30)
+busqueda_entry.pack(side=tk.LEFT, padx=5)
+
+# Botón para buscar
+btn_busqueda = tk.Button(busqueda_frame, text="Buscar", command=lambda: buscar_palabra(text_area,busqueda_entry))
+btn_busqueda.pack(side=tk.LEFT)
+# Ejecutar la aplicación
+root.mainloop()
