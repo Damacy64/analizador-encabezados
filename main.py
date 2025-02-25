@@ -1,18 +1,15 @@
 import argparse
 import sys
 import re
+import hashlib
+from email.policy import default as DefaultPolicy
+from email.parser import Parser
 # Configurar el menu de ayuda, para saber que argumentos debe de mandar
 parser = argparse.ArgumentParser(description='Procesar un archivo de texto y mostrar las líneas que comienzan con ciertos prefijos.')
 parser.add_argument('archivo', type=str, help='Ruta del archivo a procesar')
 
 # Parsear los argumentos
 args = parser.parse_args()
-
-def extraer_encabezados(texto):
-    patron = r"(^[A-Za-z0-9-]+:.*?)(?=\n[A-Za-z0-9-]+:|\Z)"
-
-    encabezados_info = re.findall(patron, texto, re.MULTILINE | re.DOTALL)
-    return encabezados_info
 
 # Varificamos que el usuario, mande un archivo
 if len(sys.argv) < 2:
@@ -24,91 +21,59 @@ nombre_archivo = sys.argv[1]
 
 try:
     with open(nombre_archivo, "r", encoding="utf-8") as archivo:
-        texto = archivo.read()  # Leer todo el contenido del archivo
+        texto = archivo.read()
+        msg = Parser(policy=DefaultPolicy).parsestr(texto)
 
-    # Extraer encabezados con su información completa
-    encabezados_info = extraer_encabezados(texto)
+        # Buscamos URL que haya en el correo
+        links = re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', texto)
+        links = list(dict.fromkeys(links)) # Borramos los links que esten duplicados
+        links = list(filter(None, links))
+        if links:
+            print(' | URLs encontradas:')
+            for link in links:
+                print("-" * 50)
+                print(f"| {link}")
+                print("-" * 50)
+        else:
+            print('No hay URLs encontradas.')
+        print('\n')
 
-    # Imprimir los encabezados con su contenido
-    for encabezado in encabezados_info:
-        print(encabezado.strip())  # Imprime cada encabezado con su información
-        print("-" * 80)  # Separador para mejor visualización
+        # Buscamos IP's en el correo
+        direcciones_ip = re.findall(r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b', texto)
+        if direcciones_ip:
+            print(' | IPs encontradas:')
+            for ip in direcciones_ip:
+                print("-" * 50)
+                print(f" | {ip}")
+                print("-" * 50) 
+        else:
+            print('No hay IPs encontradas.')
+        print('\n')
 
+        # Busqueda de los headers
+        cabecera = {key: value for key, value in msg.items()}    
+
+        # Verificar protocolos de seguridad
+        security_results = {
+        "ARC": any(key in cabecera for key in ["ARC-Seal", "ARC-Message-Signature", "ARC-Authentication-Results"]),
+        "SPF": "Received-SPF" in cabecera,
+        "DKIM": "DKIM-Signature" in cabecera,
+        "DMARC": "Authentication-Results" in cabecera and "dmarc=pass" in cabecera["Authentication-Results"].lower()
+        }
+
+        # Mostrar resultados
+        for key, value in security_results.items():
+            print(f"{key}: {'✅ Presente' if value else '❌ No encontrado'}\n")
+
+
+        for header in ['Received']:
+            cabecera[header] = msg.get_all(header) if header in msg else []
+
+        for clave, valor in cabecera.items():
+            print(f"{clave} : \n              {valor}")
+            print("-" * 250)
+        
 except FileNotFoundError:
     print(f"Error: El archivo '{nombre_archivo}' no existe.")
 except Exception as e:
     print(f"Error: {e}")
-"""    patterns = {
-        "Delivered_To": r"Delivered-To: (.+?)\n",
-        "Received": r"Received: (.+?)\n",
-        "X-Google-Smtp-Source": r"X-Google-Smtp-Source: (.+?)\n",
-        "X-Received": r"X-Received: (.+?)\n",
-        "ARC-Seal": r"ARC-Seal: (.+?)\n",
-        "ARC-Message-Signature": r"ARC-Message-Signature: (.+?)\n",
-        "ARC-Authentication-Results": r"ARC-Authentication-Results: (.+?)\n",
-        "Return-Path": r"Return-Path: (.+?)\n",
-        "Received": r"Received: (.+?)\n",
-        "Received-SPF": r"Received-SPF: (.+?)\n",
-        "Authentication-Results": r"Authentication-Results: (.+?)\n",
-        "DKIM-Signature": r"DKIM-Signature: (.+?)\n",
-        "DomainKey-Signature": r"DomainKey-Signature: (.+?)\n",
-        "Received": r"Received: (.+?)\n",
-        "IdPortal": r"IdPortal: (.+?)\n",
-        "IdTipoMail": r"IdTipoMail: (.+?)\n",
-        "List-Unsubscribe": r"List-Unsubscribe: (.+?)\n",
-        "List-Unsubscribe-Post": r"List-Unsubscribe-Post: (.+?)\n",
-        "Feedback-ID": r"Feedback-ID: (.+?)\n",
-        "MIME-Version": r"MIME-Version: (.+?)\n",
-        "From": r"From: (.+?)\n",
-        "To": r"To: (.+?)\n",
-        "Reply-To": r"Reply-To: (.+?)\n",
-        "Date": r"Date: (.+?)\n",
-        "Subject": r"Subject: (.+?)\n",
-        "Content-Type": r"Content-Type: (.+?)\n",
-        "Content-Transfer-Encoding": r"Content-Transfer-Encoding: (.+?)\n",
-        "Message-ID": r"Message-ID: (.+?)\n",
-        "X-OriginalArrivalTime": r"X-OriginalArrivalTime: (.+?)\n",
-    }
-
-    extracted_fields = {}
-
-    for field, pattern in patterns.items():
-        match = re.search(pattern, lineas)
-        if match:
-            extracted_fields[field] = match.group(1)
-
-# Imprimir los campos extraídos
-for field, value in extracted_fields.items():
-    print(f"{field}: {value}")"""
-# Procesar el contenido del archivo
-"""    for linea in lineas:
-        if linea.startswith('Delivered-To'):
-            print(linea)
-        elif linea.startswith('Received'):
-            print(linea)
-        elif linea.startswith('X-Google-Smtp-Soucer'):
-            print(linea)
-        elif linea.startswith('x-Received'):
-            print(linea)
-        elif linea.startswith('ARC-Seal'):
-            print(linea)
-        elif linea.startswith('ARC-Message-Signature'):
-            print(linea)
-        elif linea.startswith('ARC-Authentication-Results'):
-            print(linea)
-        elif linea.startswith('Return-Path'):
-            print(linea)
-        elif linea.startswith('From'):
-            print(linea)
-        elif linea.startswith('To'):
-            print(linea)
-        elif linea.startswith('Subject'):
-            print(linea)
-        elif linea.startswith('Date'):
-            print(linea)
-        elif linea.startswith('Message-ID'):
-            print(linea)
-        elif linea.startswith('Reply-To'):
-            print(linea)
-        elif linea.startswith('Authentication-Results'):
-            print(linea) """

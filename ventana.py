@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import filedialog, scrolledtext
+from tkinter import scrolledtext
 from logica.extraerHeaders import seleccionar_archivo, buscar_palabra
 
 
 root = tk.Tk()
 root.title("Revisar Correos")
-root.geometry("700x450")
+root.geometry("725x450")
+root.resizable(False,False)
 
 # Área de texto con scroll
 text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=70, height=20)
